@@ -1,0 +1,128 @@
+﻿@page "/"
+
+<PageTitle>ILCS Pelindo</PageTitle>
+<div class="container">
+    <form method="get" id="countryId">
+        <div class="mb-3">
+            <label for="country" class="form-label">Negara</label>
+            <input type="text" class="form-control" id="country">
+        </div>
+
+        <div class="mb-3">
+            <label for="port" class="form-label">Pelabuhan</label>
+            <input type="text" class="form-control" id="port">
+        </div>
+
+        <div class="mb-3">
+            <label for="item" class="form-label">Barang</label>
+            <input type="text" class="form-control" id="item">
+            <textarea class="form-control mt-4" id="itemContainer" style="height: 150px"></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="price" class="form-label">Harga</label>
+            <input type="number" class="form-control" id="price">
+        </div>
+        <div class="mb-3">
+            <label for="bea" class="form-label">Tarif Bea Masuk</label>
+            <div class="input-group">
+                <input type="number" class="form-control" id="bea">
+                <span class="input-group-text">%</span>
+            </div>
+            <textarea class="form-control mt-4" rows="2" id="bea-required"></textarea>
+        </div>
+    </form>
+
+</div>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+<script type="text/javascript">
+    BASE_URL = "http://localhost:3000"
+    var country_code;
+    $("#country").autocomplete({
+        source: function (request, response){
+            $.ajax({
+                url : `${BASE_URL}/negara?ur_negara=${encodeURIComponent(request.term)}`,
+                type : "GET", 
+                dataType : "json",
+                data : {query:request.term},
+                success : function (data) {
+                    const suggestion = [];
+                    $.each(data, function (index, country) {
+                        suggestion.push({value: country.name});
+                        country_code = country.kd_negara;
+                    })
+                    response(suggestion)
+                },
+                error : function (xhr, status, error){
+                    console.log(status, error)
+                }
+            })
+        },
+        minLength : 3,
+        select: function (event, ui) {
+            $("#country").val(ui.item.value);      
+            return false;
+        }
+    })
+    
+    $("#port").autocomplete({
+        source: function (request, response) {
+            console.log(country_code)
+        $.ajax({
+            url : `${BASE_URL}/pelabuhan?kd_negara=${encodeURIComponent(country_code)}&ur_pelabuhan=${encodeURIComponent(request.term)}`,
+            type : "GET",
+            dataType : "json",
+            data : {
+                query:request.term
+            },
+            success: function (data){
+                const suggestion = [];
+                $.each(data, function (index, port){
+                    suggestion.push({value:port.ur_pelabuhan})
+                })
+                console.log(suggestion)
+                response(suggestion)
+            }
+        })
+        },
+        minLength : 3,
+        select: function (event, ui) {
+            $("#port").val(ui.item.value);
+            return false;
+        }
+    })
+    
+    var itemDetails = [];
+    $("#item").autocomplete({
+        source: function (request, response) {
+            $.ajax({
+                url: `${BASE_URL}/barang?hs_code=${encodeURIComponent(request.term)}`,
+                dataType: "json",
+                type: "GET",
+                data: {
+                    query: request.term
+                },
+                success: function (data) {
+                const suggestions = [];
+                    $.each(data, function (index, items) {
+                        suggestions.push({value : items.details});
+                        itemDetails = suggestions;
+                        console.log(itemDetails)
+                    });
+                    response(itemDetails);
+                }
+            });
+        },
+        select : function (event, ui) {
+            $("#itemContainer").val(ui.item.value);
+            return false
+        }
+    });
+
+
+
+
+</script>
