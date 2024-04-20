@@ -70,7 +70,6 @@
     
     $("#port").autocomplete({
         source: function (request, response) {
-            console.log(country_code)
         $.ajax({
             url : `${BASE_URL}/pelabuhan?kd_negara=${encodeURIComponent(country_code)}&ur_pelabuhan=${encodeURIComponent(request.term)}`,
             type : "GET",
@@ -83,7 +82,6 @@
                 $.each(data, function (index, port){
                     suggestion.push({value:port.ur_pelabuhan})
                 })
-                console.log(suggestion)
                 response(suggestion)
             }
         })
@@ -96,6 +94,7 @@
     })
     
     var itemDetails = [];
+    var hsCode;
     $("#item").autocomplete({
         source: function (request, response) {
             $.ajax({
@@ -110,7 +109,7 @@
                     $.each(data, function (index, items) {
                         suggestions.push({value : items.details});
                         itemDetails = suggestions;
-                        console.log(itemDetails)
+                        hsCode = items.hs_code;
                     });
                     response(itemDetails);
                 }
@@ -118,11 +117,37 @@
         },
         select : function (event, ui) {
             $("#itemContainer").val(ui.item.value);
+            $("#bea").autocomplete({
+                source: function (request, response) {
+                    $.ajax({
+                        url: `${BASE_URL}/tarif?hs_code=${encodeURIComponent(hsCode)}`,
+                        dataType: "json",
+                        type: "GET",
+                        data: {
+                            query: request.term
+                        },
+                        success: function (data) {
+                            const suggestions = [];
+                            $.each(data, function (index, tarif) {
+                                suggestions.push({value : tarif.rate_bea_masuk});
+                            });
+                            response(suggestions);
+                        }
+                    });
+                },
+            })
             return false
         }
     });
 
-
+    $("#price, #bea").on("input", function() {
+        var price = $("#price").val();
+        var bea = $("#bea").val();
+        var totalBea = (price * bea) / 100;
+        $("#bea-required").val(totalBea);
+    });
+    
+    
 
 
 </script>
